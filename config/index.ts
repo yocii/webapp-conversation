@@ -3,12 +3,14 @@ export const APP_ID = `${process.env.NEXT_PUBLIC_APP_ID}`
 export const API_KEY = `${process.env.NEXT_PUBLIC_APP_KEY}`
 export const API_URL = `${process.env.NEXT_PUBLIC_API_URL}`
 export const APP_INFO: AppInfo = {
-  title: 'Chat APP',
-  description: '',
-  copyright: '',
-  privacy_policy: '',
-  default_language: 'en',
-  disable_session_same_site: false, // set it to true if you want to embed the chatbot in an iframe
+  title: process.env.NEXT_PUBLIC_APP_TITLE || 'Chat APP',
+  description: process.env.NEXT_PUBLIC_APP_DESCRIPTION || '',
+  copyright: process.env.NEXT_PUBLIC_APP_COPYRIGHT || '',
+  privacy_policy: process.env.NEXT_PUBLIC_APP_PRIVACY_POLICY || '',
+  default_language: (process.env.NEXT_PUBLIC_APP_DEFAULT_LANGUAGE || 'en') as AppInfo['default_language'],
+  disable_session_same_site: process.env.NEXT_PUBLIC_DISABLE_SESSION_SAME_SITE === 'true',
+  robot_avatar: process.env.NEXT_PUBLIC_ROBOT_AVATAR || '/robot.png',
+  logo: process.env.NEXT_PUBLIC_APP_LOGO || '/logo.png',
 }
 
 export const isShowPrompt = false

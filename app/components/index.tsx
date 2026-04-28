@@ -9,6 +9,7 @@ import Toast from '@/app/components/base/toast'
 import Sidebar from '@/app/components/sidebar'
 import ConfigSence from '@/app/components/config-scence'
 import Header from '@/app/components/header'
+import BackgroundSelector, { DEFAULT_OPTIONS, STORAGE_KEY, type BackgroundOption } from '@/app/components/background-selector'
 import { fetchAppParams, fetchChatList, fetchConversations, generationConversationName, sendChatMessage, updateFeedback } from '@/service'
 import type { ChatItem, ConversationItem, Feedbacktype, PromptConfig, VisionFile, VisionSettings } from '@/types/app'
 import type { FileUpload } from '@/app/components/base/file-uploader-in-attachment/types'
@@ -22,6 +23,7 @@ import AppUnavailable from '@/app/components/app-unavailable'
 import { API_KEY, APP_ID, APP_INFO, isShowPrompt, promptTemplate } from '@/config'
 import type { Annotation as AnnotationType } from '@/types/log'
 import { addFileInfos, sortAgentSorts } from '@/utils/tools'
+import cn from 'classnames'
 
 export interface IMainProps {
   params: any
@@ -32,6 +34,34 @@ const Main: FC<IMainProps> = () => {
   const media = useBreakpoints()
   const isMobile = media === MediaType.mobile
   const hasSetAppConfig = APP_ID && API_KEY
+
+  /*
+  * background theme
+  */
+  const [background, setBackground] = useState<BackgroundOption>(DEFAULT_OPTIONS[0])
+
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      const found = DEFAULT_OPTIONS.find(opt => opt.id === saved)
+      if (found)
+      { setBackground(found) }
+    }
+    const handleBgChange = (e: CustomEvent) => {
+      setBackground(e.detail)
+    }
+    window.addEventListener('background-change', handleBgChange as EventListener)
+    return () => {
+      window.removeEventListener('background-change', handleBgChange as EventListener)
+    }
+  }, [])
+
+  const getBackgroundStyle = () => {
+    if (background.preview) {
+      return { backgroundImage: `url(${background.preview})` }
+    }
+    return {}
+  }
 
   /*
   * app info
@@ -307,7 +337,7 @@ const Main: FC<IMainProps> = () => {
     let emptyRequiredInput = false
     promptConfig.prompt_variables.forEach((item) => {
       if (item.required && !currInputs[item.key])
-        emptyRequiredInput = true
+      { emptyRequiredInput = true }
     })
 
     if (emptyRequiredInput) {
@@ -653,14 +683,14 @@ const Main: FC<IMainProps> = () => {
   if (!APP_ID || !APP_INFO || !promptConfig) { return <Loading type='app' /> }
 
   return (
-    <div className='bg-gray-100'>
+    <div className={cn(background.value, 'min-h-screen')} style={getBackgroundStyle()}>
       <Header
         title={APP_INFO.title}
         isMobile={isMobile}
         onShowSideBar={showSidebar}
         onCreateNewChat={() => handleConversationIdChange('-1')}
       />
-      <div className="flex rounded-t-2xl bg-white overflow-hidden">
+      <div className="flex rounded-t-2xl overflow-hidden">
         {/* sidebar */}
         {!isMobile && renderSidebar()}
         {isMobile && isShowSidebar && (
@@ -687,6 +717,15 @@ const Main: FC<IMainProps> = () => {
           {
             hasSetInputs && (
               <div className='relative grow pc:w-[794px] max-w-full mobile:w-full pb-[180px] mx-auto mb-3.5' ref={chatListDomRef}>
+                {/* Robot header with background selector */}
+                <div className='flex items-center justify-center py-6 mb-4'>
+                  {APP_INFO.robot_avatar && <img src={APP_INFO.robot_avatar} alt='Robot' className='w-12 h-auto mr-3 object-contain' />}
+                  <h1 className='text-xl font-semibold text-gray-800 mr-3'>{APP_INFO.title}</h1>
+                  {APP_INFO.logo && <img src={APP_INFO.logo} alt='Logo' className='h-6 w-auto object-contain' />}
+                  <div className='ml-4'>
+                    <BackgroundSelector />
+                  </div>
+                </div>
                 <Chat
                   chatList={chatList}
                   onSend={handleSend}
